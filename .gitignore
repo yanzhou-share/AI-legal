@@ -1,0 +1,48 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+*.egg
+dist/
+build/
+eggs/
+*.whl
+
+# Virtual Environment
+venv/
+env/
+.venv/
+.env/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Project specific
+uploads/
+outputs/
+*.docx
+*.doc
+!prompt.txt
+
+# Logs
+*.log
+log/
+
+# Config (contains API keys)
+config.yaml
+
+# Temporary files
+*.tmp
+*.bak
+*.orig

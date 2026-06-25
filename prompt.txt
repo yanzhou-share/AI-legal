@@ -1,0 +1,43 @@
+你是一个精通 Python 异步编程、高级自动化和 LLM Agent 架构的高级软件架构师。
+请帮我编写一个完整的、模块化的 Python 项目代码，实现一个“智能法务合同修改与润色智能体”。
+
+### 项目核心功能
+该智能体能够读取 Word（.docx）合同，利用大模型对合同条款进行语义级的风险审查与对等性润色，并在不破坏 Word 原有排版格式（如加粗、下划线、字体、颜色）的前提下，将修改后的条款精准回填。
+
+### 技术栈要求
+- 文档处理：python-docx
+- 代码审计：ast (Python内置)
+- 大模型调用：使用标准的 openai 兼容 SDK 格式（支持自定义 base_url 和 api_key）
+- 代码结构：面向对象编程（OOP），必须包含清晰的类定义、类型提示（Type Hints）和异常处理。
+
+### 目录结构与模块规划
+请在单文件或模块化的结构中，完整实现以下四个核心类：
+
+1. `ContractPerception`（合同感知模块）
+   - 函数 `scan_contract(file_path)`：利用 python-docx 读取合同。
+   - 将合同按“段落”和“表格单元格”进行切片，为每个独立文本块赋予一个唯一的 `block_id`。
+   - 返回一个结构化的列表，包含所有文本块的 id 和原始文本内容。
+
+2. `LegalBrain`（法务大模型决策模块）
+   - 函数 `review_and_rewrite(user_instruction, block_text)`：
+   - 构造严格的 System Prompt（扮演15年经验的法务总监）和带有 JSON 约束的 User Prompt。
+   - 调用 LLM API，对传入的文本块根据用户的指令进行重写。
+   - 必须强制模型输出结构化 JSON：{"has_risk": bool, "risk_analysis": str, "revised_text": str}。
+   - 包含 JSON 解析失败的重试纠错逻辑（至少重试2次）。
+
+3. `SecurityGuard`（AST安全与合规审计模块）
+   - 函数 `audit_json_response(llm_json)`：虽然大模型理论上只返回合同文本，但为了防止提示词注入攻击，必须使用 `ast.parse()` 对 `revised_text` 进行静态检查，确保其不包含任何 Python 可执行代码段、系统命令或恶意注入字符。
+
+4. `ContractExecutor`（无损回填与执行模块）
+   - 函数 `execute_modification(file_path, output_path, modification_map)`：
+   - 接收一个字典 `{block_id: revised_text}`。
+   - 遍历 Word 文档，定位到对应的 `block_id` 所在的段落或表格。
+   - 采用【Run级无损替换算法】：若整段被重写，清空原有 Runs，但新写入文本时必须继承或维持原段落的首行缩进、字体（如仿宋_GB2312）和字号；如果是局部词替换，须精准定位最小 Run 单元，严禁使用 `p.text = ...` 直接覆盖导致排版丢失。
+
+### 约束条件
+1. 代码必须是全功能实现，严禁使用 `# 此处省略`、`# TODO` 或伪代码。
+2. 包含一个显式的 `if __name__ == "__main__":` 完整测试工作流：
+   - 自动创建一个包含“不平等违约条款”的模拟 `test_contract.docx`。
+   - 给定用户指令：“把里面对乙方不利的单方面高额违约金条款修改为双方平等的对等条款”。
+   - 运行整个智能体闭环，并生成 `modified_contract.docx`。
+3. 请开始生成这个健壮的生产级 Python 项目代码。

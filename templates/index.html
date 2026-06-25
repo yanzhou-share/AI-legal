@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>智能法务合同修改与润色智能体</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; padding: 20px; }
+        .container { max-width: 800px; margin: 0 auto; background: white; border-radius: 16px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); overflow: hidden; }
+        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; }
+        .header h1 { font-size: 24px; margin-bottom: 10px; }
+        .header p { opacity: 0.9; font-size: 14px; }
+        .content { padding: 30px; }
+        .flash { padding: 12px 16px; border-radius: 8px; margin-bottom: 16px; font-size: 14px; }
+        .flash.error { background: #fee2e2; color: #dc2626; border: 1px solid #fecaca; }
+        .flash.success { background: #d1fae5; color: #059669; border: 1px solid #a7f3d0; }
+        .form-group { margin-bottom: 24px; }
+        .form-group label { display: block; font-weight: 600; margin-bottom: 8px; color: #374151; font-size: 14px; }
+        .form-group .hint { font-size: 12px; color: #6b7280; margin-top: 4px; }
+        .file-upload { border: 2px dashed #d1d5db; border-radius: 12px; padding: 40px; text-align: center; transition: all 0.3s; cursor: pointer; background: #f9fafb; }
+        .file-upload:hover { border-color: #667eea; background: #f3f4f6; }
+        .file-upload-icon { font-size: 48px; margin-bottom: 16px; }
+        .file-upload-text { color: #6b7280; font-size: 14px; }
+        .file-upload-text strong { color: #667eea; }
+        .file-input { display: none; }
+        .file-info { margin-top: 16px; padding: 12px; background: #f3f4f6; border-radius: 8px; display: none; }
+        .file-info.show { display: block; }
+        .file-info .file-name { font-weight: 600; color: #374151; }
+        .file-info .file-size { font-size: 12px; color: #6b7280; margin-top: 4px; }
+        textarea { width: 100%; min-height: 120px; padding: 12px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px; resize: vertical; font-family: inherit; }
+        textarea:focus { outline: none; border-color: #667eea; box-shadow: 0 0 0 3px rgba(102,126,234,0.1); }
+        .submit-btn { width: 100%; padding: 14px 24px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; transition: transform 0.2s; }
+        .submit-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(102,126,234,0.4); }
+        .examples { margin-top: 20px; padding: 16px; background: #f9fafb; border-radius: 8px; border: 1px solid #e5e7eb; }
+        .examples h3 { font-size: 14px; color: #374151; margin-bottom: 12px; }
+        .example-item { padding: 8px 12px; background: white; border-radius: 6px; margin-bottom: 8px; font-size: 13px; color: #4b5563; cursor: pointer; }
+        .example-item:hover { background: #f3f4f6; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>智能法务合同修改与润色智能体</h1>
+            <p>上传 Word 合同文档，输入修改指令，AI 自动识别风险条款并智能润色</p>
+        </div>
+        <div class="content">
+            {% if error %}
+            <div class="flash error">{{ error }}</div>
+            {% endif %}
+            {% if success %}
+            <div class="flash success">{{ success }}</div>
+            {% endif %}
+
+            <form id="uploadForm" action="/" method="POST" enctype="multipart/form-data">
+                <div class="form-group">
+                    <label>上传合同文件</label>
+                    <div class="file-upload" id="dropZone">
+                        <div class="file-upload-icon">&#128196;</div>
+                        <div class="file-upload-text">拖拽文件到此处，或<strong>点击选择文件</strong></div>
+                        <div class="file-upload-text" style="margin-top:8px;font-size:12px;">支持 .docx 格式，最大 20MB</div>
+                    </div>
+                    <input type="file" name="file" id="fileInput" class="file-input" accept=".docx">
+                    <div class="file-info" id="fileInfo">
+                        <div class="file-name" id="fileName"></div>
+                        <div class="file-size" id="fileSize"></div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="instruction">修改指令</label>
+                    <textarea name="instruction" id="instruction" placeholder="请输入您希望对合同进行的修改指令..." required></textarea>
+                    <div class="hint">例如：把里面对乙方不利的单方面高额违约金条款修改为双方平等的对等条款</div>
+                </div>
+
+                <div class="examples">
+                    <h3>示例指令</h3>
+                    <div class="example-item" onclick="document.getElementById('instruction').value=this.textContent">把里面对乙方不利的单方面高额违约金条款修改为双方平等的对等条款</div>
+                    <div class="example-item" onclick="document.getElementById('instruction').value=this.textContent">审查合同中的知识产权条款，确保我方权益得到保护</div>
+                    <div class="example-item" onclick="document.getElementById('instruction').value=this.textContent">将所有模糊的时间约定修改为明确的日期</div>
+                    <div class="example-item" onclick="document.getElementById('instruction').value=this.textContent">检查并修改合同中的争议解决条款，优先选择仲裁方式</div>
+                </div>
+
+                <div style="margin-top:24px;">
+                    <button type="submit" class="submit-btn" id="submitBtn">开始智能审查</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('fileInput');
+        const fileInfo = document.getElementById('fileInfo');
+        dropZone.addEventListener('click', () => fileInput.click());
+        dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.style.borderColor='#667eea'; });
+        dropZone.addEventListener('dragleave', () => { dropZone.style.borderColor='#d1d5db'; });
+        dropZone.addEventListener('drop', e => { e.preventDefault(); dropZone.style.borderColor='#d1d5db'; if(e.dataTransfer.files.length>0){fileInput.files=e.dataTransfer.files;updateInfo(e.dataTransfer.files[0]);} });
+        fileInput.addEventListener('change', e => { if(e.target.files.length>0) updateInfo(e.target.files[0]); });
+        function updateInfo(f){ document.getElementById('fileName').textContent=f.name; document.getElementById('fileSize').textContent=(f.size/1024).toFixed(1)+' KB'; fileInfo.classList.add('show'); }
+        document.getElementById('uploadForm').addEventListener('submit', e => { if(!fileInput.files.length){alert('请选择文件');e.preventDefault();} if(!document.getElementById('instruction').value.trim()){alert('请输入修改指令');e.preventDefault();} });
+    </script>
+</body>
+</html>
